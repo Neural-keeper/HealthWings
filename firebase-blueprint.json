@@ -1,0 +1,99 @@
+{
+  "entities": {
+    "AstronautProfile": {
+      "title": "AstronautProfile",
+      "description": "Saved HealthWings astronaut telemetry, mood survey, symptom flags, and earned solar-system stars for an authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "callsign": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "starsEarned": {
+          "type": "number"
+        },
+        "selectedSymptoms": {
+          "type": "array"
+        },
+        "biometrics": {
+          "type": "object"
+        },
+        "completedTests": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "callsign",
+        "starsEarned",
+        "selectedSymptoms",
+        "biometrics",
+        "completedTests",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "HealthCheckinLog": {
+      "title": "HealthCheckinLog",
+      "description": "Completed Dr. Pisces tasks and light-based zero-G scan entries for an astronaut.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "note": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 280
+        },
+        "starReward": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "title", "note", "starReward", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/AstronautProfile" },
+      "description": "Private astronaut HealthWings profile and saved orbital wellness telemetry."
+    },
+    "/users/{userId}/checkins/{checkinId}": {
+      "schema": { "$ref": "#/entities/HealthCheckinLog" },
+      "description": "Private log of completed Dr. Pisces check-ins and recipe-style zero-G test completions."
+    }
+  }
+}

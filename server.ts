@@ -36,7 +36,7 @@ function getGeminiClient(): GoogleGenAI | null {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'pisces-orbital-health' });
+  res.json({ ok: true, service: 'healthwings' });
 });
 
 app.post('/api/ml/analyze', (req, res) => {
@@ -72,14 +72,13 @@ app.post('/api/pisces/chat', async (req, res) => {
   const ai = getGeminiClient();
 
   if (!ai) {
-    // Grounded NASA LSAH fallback when GEMINI_API_KEY is not configured in environment
     const topRisk = mlResult.predictions[0];
     res.json({
-      reply: `Bloop-bloop! I reviewed your Mission Day ${biometrics.flightDay} biometrics against NASA LSAH crew cohorts. Your top focus area right now is ${mlResult.criticalMetric.metricName} (${mlResult.criticalMetric.currentReading} vs target ${mlResult.criticalMetric.targetReading}), with ${topRisk.probability}% estimated ${topRisk.conditionName} drift. Are you noticing any changes in ${symptoms.length ? 'those symptoms' : 'your vision, sleep, or energy'} today? Let's run the ${mlResult.recommendedTest.name}—it uses pure light and works cleanly in zero gravity!`,
+      reply: `Bloop-bloop! I checked your Day ${biometrics.flightDay} HealthWings numbers against NASA astronaut averages. The main thing to watch today is ${mlResult.criticalMetric.metricName} (${mlResult.criticalMetric.currentReading} vs goal ${mlResult.criticalMetric.targetReading}) for ${topRisk.conditionName}. Let's pop open the ${mlResult.recommendedTest.name} Space Test card—it uses gentle light and works cleanly without gravity!`,
       followUpQuestions: [
-        'Are you experiencing any near-vision blur or frontal pressure?',
-        'How rested did you feel after your last sleep cycle?',
-        'Would you like to log a quick light-based scan right now?',
+        'Are you noticing any blurry close-up vision or head pressure?',
+        'How rested did you feel after your last sleep?',
+        'Show me the quick Space Test card',
       ],
       recommendedTestId: mlResult.recommendedTest.id,
       showTestCard: true,
@@ -94,11 +93,11 @@ app.post('/api/pisces/chat', async (req, res) => {
       (t) => `- ${t.id}: ${t.name} (${t.wavelengthNm}, ${t.durationSec}s, targets ${t.targetSystems.join(', ')})`
     ).join('\n');
 
-    const systemInstruction = `You are Dr. Pisces, a friendly, warm, scientifically grounded goldfish astronaut flight surgeon mascot for the Pisces Orbital Health app.
-You advise astronauts in orbit using NASA's Lifetime Surveillance of Astronaut Health (LSAH) reference cohorts.
-Keep tone upbeat, concise (2-4 sentences), empathetic, and medically practical.
-Always ask 1-2 focused follow-up questions about symptoms or mission context when helpful.
-When recommending a diagnostic measurement, choose one of the light-based zero-gravity tests below (since gravity-dependent blood/mercury tests fail in orbit) and set showTestCard to true.
+    const systemInstruction = `You are Dr. Pisces, a friendly, warm goldfish health buddy for the HealthWings astronaut wellness app.
+You guide astronauts in space using plain, simple language backed by NASA's Lifetime Surveillance of Astronaut Health (LSAH) averages.
+Keep replies friendly, clear, and concise (2-4 sentences). Avoid overly dense jargon.
+Always ask 1-2 gentle follow-up questions about how they feel when helpful.
+When recommending a check, pick one of the light-based zero-gravity Space Test cards below and set showTestCard to true.
 
 Current Astronaut Biometrics (Flight Day ${biometrics.flightDay}):
 - Mood Survey: ${biometrics.moodScore}/10

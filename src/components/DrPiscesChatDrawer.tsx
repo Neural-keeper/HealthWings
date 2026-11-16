@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, X, Loader2 } from 'lucide-react';
+import { Send, X, Loader2, Sparkles } from 'lucide-react';
 import {
   AstronautBiometrics,
   ZERO_G_LIGHT_TESTS,
   ZeroGTestProtocol,
 } from '../data/lsahData';
 import { DrPiscesMascot } from './DrPiscesMascot';
-import { ZeroGTestCard } from './ZeroGTestCard';
 
 export interface ChatMessage {
   id: string;
@@ -23,7 +22,7 @@ interface DrPiscesChatDrawerProps {
   selectedSymptoms: string[];
   queuedPrompt: string | null;
   onClearQueuedPrompt: () => void;
-  onCompleteTest: (protocol: ZeroGTestProtocol) => void;
+  onPopSpaceTest: (protocol: ZeroGTestProtocol) => void;
 }
 
 export const DrPiscesChatDrawer: React.FC<DrPiscesChatDrawerProps> = ({
@@ -33,17 +32,17 @@ export const DrPiscesChatDrawer: React.FC<DrPiscesChatDrawerProps> = ({
   selectedSymptoms,
   queuedPrompt,
   onClearQueuedPrompt,
-  onCompleteTest,
+  onPopSpaceTest,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-1',
       role: 'assistant',
-      text: `Bloop! I'm Dr. Pisces, your orbital flight surgeon. Looking at Flight Day ${biometrics.flightDay}, how are your eyes, sleep, and energy feeling today? Tell me any symptoms and I'll match a light-based zero-G test!`,
+      text: `Bloop! I'm Dr. Pisces, your HealthWings buddy. Looking at Day ${biometrics.flightDay} in space, how are your eyes, sleep, and energy feeling today? Tell me what you notice and I'll pop up an easy Space Test card!`,
       followUpQuestions: [
-        'I have slight near-vision blur after waking',
-        'Sleep felt fragmented last night',
-        'What zero-G light test should I take today?',
+        'Close-up vision looks a little blurry',
+        'I had trouble sleeping last night',
+        'Which Space Test should I do today?',
       ],
     },
   ]);
@@ -99,7 +98,7 @@ export const DrPiscesChatDrawer: React.FC<DrPiscesChatDrawerProps> = ({
           text:
             data.reply ??
             data.error ??
-            'Bloop—let us check your cabin optical sensors right away!',
+            'Bloop—let us try a quick light check right now!',
           followUpQuestions: data.followUpQuestions ?? [],
           recommendedTest: matchedTest,
         },
@@ -110,7 +109,7 @@ export const DrPiscesChatDrawer: React.FC<DrPiscesChatDrawerProps> = ({
         {
           id: `pisces-err-${Date.now()}`,
           role: 'assistant',
-          text: 'My telemetry antenna had a brief hiccup, but here is our Optical PPG scan card you can run offline in zero-G right now.',
+          text: 'My radio antenna had a quick hiccup, so here is an offline Finger Light Pulse Space Test card you can do anytime.',
           recommendedTest: ZERO_G_LIGHT_TESTS[0],
         },
       ]);
@@ -138,19 +137,19 @@ export const DrPiscesChatDrawer: React.FC<DrPiscesChatDrawerProps> = ({
       className="fixed inset-0 z-50 flex justify-end bg-slate-950/45 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
-      aria-label="Dr. Pisces Astronaut Health Chat"
+      aria-label="Dr. Pisces HealthWings Chat"
     >
       <div className="w-full max-w-lg h-full bg-sky-50 dark:bg-slate-950 border-l border-sky-200 dark:border-slate-800 flex flex-col shadow-2xl">
         {/* Drawer Header */}
         <div className="px-5 py-4 bg-gradient-to-r from-sky-100 to-amber-100 dark:from-slate-900 dark:to-slate-900 border-b border-sky-200 dark:border-slate-800 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <DrPiscesMascot size={54} />
+            <DrPiscesMascot size={56} />
             <div>
               <h2 className="font-display text-xl font-bold text-orange-bordered-sm">
-                Dr. Pisces AI Triage
+                Dr. Pisces Helper
               </h2>
               <p className="text-xs text-sky-800 dark:text-slate-400">
-                NASA LSAH Symptom Q&amp;A · Zero-G Light Diagnostics
+                Friendly Health Q&amp;A · Space Test Cards
               </p>
             </div>
           </div>
@@ -183,14 +182,17 @@ export const DrPiscesChatDrawer: React.FC<DrPiscesChatDrawerProps> = ({
                 {msg.text}
               </div>
 
-              {/* Embedded Zero-G Light Test Card */}
+              {/* Pop-up trigger button for recommended Space Test Card */}
               {msg.recommendedTest && (
-                <div className="w-full mt-3">
-                  <ZeroGTestCard
-                    protocol={msg.recommendedTest}
-                    onCompleteTest={onCompleteTest}
-                    compact
-                  />
+                <div className="mt-2.5">
+                  <button
+                    type="button"
+                    onClick={() => onPopSpaceTest(msg.recommendedTest!)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-300 hover:bg-amber-400 text-orange-950 font-display font-semibold text-xs border-2 border-orange-500 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-orange-700" aria-hidden="true" />
+                    <span>Open Space Test Card: {msg.recommendedTest.name}</span>
+                  </button>
                 </div>
               )}
 

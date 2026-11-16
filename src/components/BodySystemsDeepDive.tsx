@@ -27,23 +27,23 @@ const HealthyBenchmarkBar: React.FC<{ metric: BenchmarkMetric }> = ({ metric }) 
   );
 
   const statusTone =
-    status === 'Nominal'
+    status === 'Healthy'
       ? 'text-emerald-700 dark:text-emerald-300'
       : status === 'Watch'
       ? 'text-amber-700 dark:text-amber-300'
       : 'text-rose-700 dark:text-rose-300';
 
   const markerTone =
-    status === 'Nominal'
+    status === 'Healthy'
       ? 'bg-emerald-500 border-white dark:border-slate-900'
       : status === 'Watch'
       ? 'bg-amber-500 border-white dark:border-slate-900'
       : 'bg-rose-500 border-white dark:border-slate-900';
 
-  const statusGlyph = status === 'Nominal' ? '●' : status === 'Watch' ? '▲' : '✖';
+  const statusGlyph = status === 'Healthy' ? '●' : status === 'Watch' ? '▲' : '✖';
 
   return (
-    <div className="p-4 rounded-2xl bg-sky-50/70 dark:bg-slate-800/60 border border-sky-200/80 dark:border-slate-700/80">
+    <div className="p-4 rounded-2xl bg-sky-50/85 dark:bg-slate-800/70 border border-sky-200 dark:border-slate-700">
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
         <span className="text-sm font-semibold text-sky-950 dark:text-white">
           {metric.label}
@@ -58,13 +58,10 @@ const HealthyBenchmarkBar: React.FC<{ metric: BenchmarkMetric }> = ({ metric }) 
         </div>
       </div>
 
-      {/* Horizontal Scale with Healthy Adult Band + Astronaut Marker */}
       <div className="relative h-6 flex items-center my-2">
-        {/* Track */}
-        <div className="w-full h-2.5 rounded-full bg-sky-200/80 dark:bg-slate-700 relative overflow-hidden">
-          {/* Healthy Adult Target Zone */}
+        <div className="w-full h-3 rounded-full bg-white dark:bg-slate-700 border border-sky-200 dark:border-slate-600 relative overflow-hidden">
           <div
-            className="absolute top-0 bottom-0 bg-emerald-300/75 dark:bg-emerald-500/45 border-x border-emerald-600/50"
+            className="absolute top-0 bottom-0 bg-emerald-300/80 dark:bg-emerald-500/45 border-x border-emerald-600/50"
             style={{
               left: `${Math.max(0, healthyLeftPct)}%`,
               width: `${Math.min(100, healthyWidthPct)}%`,
@@ -73,17 +70,16 @@ const HealthyBenchmarkBar: React.FC<{ metric: BenchmarkMetric }> = ({ metric }) 
           />
         </div>
 
-        {/* Astronaut Current Position Pin */}
         <div
           className={`absolute w-4 h-4 rounded-full border-2 shadow-sm -translate-x-1/2 transition-all duration-300 ${markerTone}`}
           style={{ left: `${currentPct}%` }}
-          aria-label={`Astronaut current reading ${metric.currentValue} ${metric.unit}`}
+          aria-label={`Your reading ${metric.currentValue} ${metric.unit}`}
         />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-sky-800 dark:text-slate-400">
         <span className="font-mono-tabular">
-          Healthy Adult Zone: {metric.healthyMin}–{metric.healthyMax} {metric.unit}
+          Healthy Adult Range: {metric.healthyMin}–{metric.healthyMax} {metric.unit}
         </span>
         <span>{metric.lsahCohortNote}</span>
       </div>
@@ -121,11 +117,9 @@ const LongitudinalScatterPlot: React.FC<{
   const mapY = (val: number) =>
     height - padB - ((val - minVal) / (maxVal - minVal || 1)) * (height - padT - padB);
 
-  // Build healthy band rectangle
   const yHealthyTop = mapY(primaryBenchmark.healthyMax);
   const yHealthyBottom = mapY(primaryBenchmark.healthyMin);
 
-  // Cohort mean trend path across filtered points
   const sortedPoints = [...points].sort((a, b) => a.flightDay - b.flightDay);
   const meanLinePath = sortedPoints
     .map((pt, i) => `${i === 0 ? 'M' : 'L'} ${mapX(pt.flightDay).toFixed(1)} ${mapY(pt.cohortMean).toFixed(1)}`)
@@ -134,13 +128,13 @@ const LongitudinalScatterPlot: React.FC<{
   const hoveredPoint = points.find((p) => p.id === hoveredPointId) ?? null;
 
   return (
-    <div className="relative rounded-2xl bg-white dark:bg-slate-950/70 border border-sky-200 dark:border-slate-800 p-3">
+    <div className="relative rounded-2xl bg-sky-50/50 dark:bg-slate-950/75 border border-sky-200 dark:border-slate-800 p-3.5">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
         <span className="text-xs font-semibold text-sky-900 dark:text-slate-200">
-          {primaryBenchmark.label} over Mission Timeline ({system.primaryUnit})
+          {primaryBenchmark.label} Over Time ({system.primaryUnit})
         </span>
         <span className="text-[11px] font-mono-tabular text-sky-700 dark:text-slate-400">
-          Hover points for cohort stats
+          Hover dots for crew averages
         </span>
       </div>
 
@@ -150,7 +144,6 @@ const LongitudinalScatterPlot: React.FC<{
         role="img"
         aria-label={`Scatter plot of ${system.name} across mission days`}
       >
-        {/* Healthy Adult Target Band */}
         <rect
           x={padL}
           y={yHealthyTop}
@@ -159,7 +152,6 @@ const LongitudinalScatterPlot: React.FC<{
           fill="rgba(16, 185, 129, 0.14)"
         />
 
-        {/* Horizontal gridlines */}
         {[0, 0.25, 0.5, 0.75, 1].map((t) => {
           const val = Math.round(minVal + t * (maxVal - minVal));
           const y = mapY(val);
@@ -188,7 +180,6 @@ const LongitudinalScatterPlot: React.FC<{
           );
         })}
 
-        {/* X-axis Launch FD-0 marker if visible */}
         {minDay <= 0 && maxDay >= 0 && (
           <line
             x1={mapX(0)}
@@ -202,7 +193,6 @@ const LongitudinalScatterPlot: React.FC<{
           />
         )}
 
-        {/* X-axis tick labels */}
         {[-30, 0, 60, 120, 180, 210]
           .filter((d) => d >= minDay && d <= maxDay)
           .map((d) => (
@@ -215,11 +205,10 @@ const LongitudinalScatterPlot: React.FC<{
               fontFamily="JetBrains Mono, monospace"
               className="fill-sky-800 dark:fill-slate-400"
             >
-              {d < 0 ? `L${d}` : d > 180 ? `R+${d - 180}` : `FD-${d}`}
+              {d < 0 ? `Before` : d > 180 ? `Back` : `Day ${d}`}
             </text>
           ))}
 
-        {/* NASA LSAH Cohort Mean Trend Line */}
         {sortedPoints.length > 1 && (
           <path
             d={meanLinePath}
@@ -231,7 +220,6 @@ const LongitudinalScatterPlot: React.FC<{
           />
         )}
 
-        {/* Crosshair guide on hover */}
         {hoveredPoint && (
           <g pointerEvents="none">
             <line
@@ -255,7 +243,6 @@ const LongitudinalScatterPlot: React.FC<{
           </g>
         )}
 
-        {/* Scatter points */}
         {sortedPoints.map((pt) => {
           const cx = mapX(pt.flightDay);
           const cy = mapY(pt.value);
@@ -298,24 +285,23 @@ const LongitudinalScatterPlot: React.FC<{
         })}
       </svg>
 
-      {/* Interactive Tooltip Footer */}
-      <div className="mt-2 pt-2 border-t border-sky-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-tabular min-h-[26px]">
+      <div className="mt-2 pt-2 border-t border-sky-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-tabular min-h-[26px]">
         {hoveredPoint ? (
           <>
             <span className="font-semibold text-orange-600 dark:text-amber-300">
-              {hoveredPoint.isCurrentCrew ? 'Live Crew Reading' : hoveredPoint.phase} · Day {hoveredPoint.flightDay}
+              {hoveredPoint.isCurrentCrew ? 'Your Reading' : hoveredPoint.phase} · Day {hoveredPoint.flightDay}
             </span>
             <span className="text-sky-950 dark:text-slate-200">
-              Value: {hoveredPoint.value} {system.primaryUnit} · Cohort Mean: {hoveredPoint.cohortMean}±{hoveredPoint.cohortSd} (N={hoveredPoint.cohortN})
+              {hoveredPoint.value} {system.primaryUnit} · Crew Avg: {hoveredPoint.cohortMean}±{hoveredPoint.cohortSd} (N={hoveredPoint.cohortN})
             </span>
           </>
         ) : (
           <>
             <span className="text-sky-700 dark:text-slate-400">
-              Green band = Healthy Adult Zone · Dashed = NASA LSAH Cohort Mean
+              Green band = Healthy Adult Zone · Dashed = NASA Crew Avg
             </span>
             <span className="text-orange-600 dark:text-amber-300">
-              Orange ring = Your live FD-{system.scatterSeries.find((p) => p.isCurrentCrew)?.flightDay} point
+              Orange dot = Your Day {system.scatterSeries.find((p) => p.isCurrentCrew)?.flightDay} point
             </span>
           </>
         )}
@@ -338,7 +324,7 @@ export const BodySystemsDeepDive: React.FC<BodySystemsDeepDiveProps> = ({
         return (
           <label className="block text-xs">
             <div className="flex justify-between font-semibold mb-1">
-              <span>Simulate NK-Cell Cytotoxicity</span>
+              <span>Test Fighter Cell Level</span>
               <span className="font-mono-tabular">{biometrics.nkCellActivity}%</span>
             </div>
             <input
@@ -355,7 +341,7 @@ export const BodySystemsDeepDive: React.FC<BodySystemsDeepDiveProps> = ({
         return (
           <label className="block text-xs">
             <div className="flex justify-between font-semibold mb-1">
-              <span>Simulate 25-OH Vitamin D</span>
+              <span>Test Vitamin D Level</span>
               <span className="font-mono-tabular">{biometrics.vitaminD} ng/mL</span>
             </div>
             <input
@@ -372,7 +358,7 @@ export const BodySystemsDeepDive: React.FC<BodySystemsDeepDiveProps> = ({
         return (
           <label className="block text-xs">
             <div className="flex justify-between font-semibold mb-1">
-              <span>Simulate Sleep Duration</span>
+              <span>Test Sleep Hours</span>
               <span className="font-mono-tabular">{biometrics.sleepHours.toFixed(1)} hrs</span>
             </div>
             <input
@@ -390,7 +376,7 @@ export const BodySystemsDeepDive: React.FC<BodySystemsDeepDiveProps> = ({
         return (
           <label className="block text-xs">
             <div className="flex justify-between font-semibold mb-1">
-              <span>Simulate Resting Heart Rate</span>
+              <span>Test Resting Heart Rate</span>
               <span className="font-mono-tabular">{biometrics.restingHr} bpm</span>
             </div>
             <input
@@ -407,7 +393,7 @@ export const BodySystemsDeepDive: React.FC<BodySystemsDeepDiveProps> = ({
         return (
           <label className="block text-xs">
             <div className="flex justify-between font-semibold mb-1">
-              <span>Simulate Choroidal Thickness Shift</span>
+              <span>Test Eye Fluid Shift</span>
               <span className="font-mono-tabular">+{biometrics.choroidalDeltaUm} μm</span>
             </div>
             <input
@@ -426,23 +412,22 @@ export const BodySystemsDeepDive: React.FC<BodySystemsDeepDiveProps> = ({
   return (
     <section
       id="body-systems"
-      className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12"
+      className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-10 pb-16"
     >
-      {/* Header + Phase Filter Tabs */}
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-7">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-sky-700 dark:text-cyan-300 mb-1">
-            Scroll Deep-Dive · Dynamic Scatter Plots &amp; Healthy Adult Benchmarks
+          <p className="text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-cyan-300 mb-1">
+            Detailed Body Checks · Healthy Ranges &amp; Trends Over Time
           </p>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-orange-bordered text-balance">
-            Body Systems Longitudinal Telemetry
+            Body Systems Breakdown
           </h2>
         </div>
 
         <div
           role="group"
           aria-label="Mission phase filter"
-          className="inline-flex items-center gap-1 p-1 rounded-xl bg-sky-100 dark:bg-slate-900 border border-sky-200 dark:border-slate-800"
+          className="inline-flex items-center gap-1 p-1 rounded-xl bg-white dark:bg-slate-900 border border-sky-200 dark:border-slate-800"
         >
           {(['All', 'Pre-Flight', 'In-Flight', 'Post-Flight'] as const).map((phase) => (
             <button
@@ -452,34 +437,48 @@ export const BodySystemsDeepDive: React.FC<BodySystemsDeepDiveProps> = ({
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                 phaseFilter === phase
                   ? 'bg-amber-300 text-orange-950 border border-orange-500'
-                  : 'text-sky-900 dark:text-slate-300 hover:bg-sky-200/70 dark:hover:bg-slate-800'
+                  : 'text-sky-900 dark:text-slate-300 hover:bg-sky-100 dark:hover:bg-slate-800'
               }`}
             >
-              {phase}
+              {phase === 'All' ? 'All Days' : phase === 'Pre-Flight' ? 'Before Flight' : phase === 'In-Flight' ? 'In Space' : 'Back on Earth'}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Stacked Progressive Detail Sections for All 5 Body Systems */}
-      <div className="space-y-8">
+      <div className="space-y-6">
         {systems.map((sys, idx) => {
           const test = ZERO_G_LIGHT_TESTS.find((t) => t.id === sys.recommendedTestId);
           return (
             <article
               key={sys.id}
-              className="p-5 sm:p-7 rounded-3xl bg-white/90 dark:bg-slate-900/90 border border-sky-200 dark:border-slate-800 shadow-sm"
+              className="p-5 sm:p-6 rounded-3xl bg-white/92 dark:bg-slate-900/90 border border-sky-200 dark:border-slate-800 shadow-sm"
             >
               <div className="flex flex-wrap items-start justify-between gap-4 mb-5 pb-4 border-b border-sky-100 dark:border-slate-800">
                 <div className="max-w-2xl">
                   <div className="text-xs font-semibold text-sky-700 dark:text-cyan-300">
-                    0{idx + 1}. {sys.wingSide === 'mental' ? 'Left Wing · Mental Health' : 'Right Wing · Physical Health'} · {sys.lsahStudyRef}
+                    0{idx + 1}. {sys.wingSide === 'mental' ? 'Mental Wing' : 'Physical Wing'} · {sys.lsahStudyRef}
                   </div>
                   <h3 className="font-display text-2xl font-bold text-orange-bordered-sm mt-1">
                     {sys.name}
                   </h3>
-                  <p className="text-sm text-sky-900/90 dark:text-slate-300 mt-1.5 leading-relaxed">
+                  <p className="text-sm text-sky-900/90 dark:text-slate-300 mt-1 leading-relaxed">
                     {sys.summary}
+                  </p>
+                  <p className="text-xs text-sky-800 dark:text-slate-400 mt-2">
+                    <span className="font-semibold text-sky-950 dark:text-slate-200">
+                      Data Citation:
+                    </span>{' '}
+                    {sys.sourceName} — {sys.dataName} (
+                    <a
+                      href={sys.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-orange-600 dark:text-amber-300 hover:underline"
+                    >
+                      Source Link
+                    </a>
+                    )
                   </p>
                 </div>
 
@@ -487,26 +486,24 @@ export const BodySystemsDeepDive: React.FC<BodySystemsDeepDiveProps> = ({
                   <button
                     type="button"
                     onClick={() => onOpenTestModal(test.id)}
-                    className="px-4 py-2 rounded-xl bg-sky-100 hover:bg-sky-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sky-950 dark:text-sky-100 text-xs font-semibold border border-sky-300 dark:border-slate-700 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-orange-950 dark:text-amber-200 text-xs font-semibold border border-amber-300 dark:border-slate-700 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                   >
-                    Open {test.name}
+                    <span>Space Test: {test.name}</span>
                   </button>
                 )}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Left 6 cols: Healthy Adult Benchmark Bars + Interactive Telemetry Simulator */}
-                <div className="lg:col-span-6 space-y-4">
+                <div className="lg:col-span-6 space-y-3.5">
                   {sys.benchmarks.map((m) => (
                     <HealthyBenchmarkBar key={m.id} metric={m} />
                   ))}
 
-                  <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-slate-800/40 border border-amber-200 dark:border-slate-700">
+                  <div className="p-4 rounded-2xl bg-amber-50/85 dark:bg-slate-800/45 border border-amber-200 dark:border-slate-700">
                     {renderSystemControl(sys.id)}
                   </div>
                 </div>
 
-                {/* Right 6 cols: Dynamic Scatter Plot over Time */}
                 <div className="lg:col-span-6">
                   <LongitudinalScatterPlot system={sys} phaseFilter={phaseFilter} />
                 </div>

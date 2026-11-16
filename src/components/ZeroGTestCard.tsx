@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-import { SunMedium, CheckCircle2, Timer, Sparkles } from 'lucide-react';
+import { SunMedium, CheckCircle2, Clock, Sparkles } from 'lucide-react';
 import { ZeroGTestProtocol } from '../data/lsahData';
 
 interface ZeroGTestCardProps {
   protocol: ZeroGTestProtocol;
   onCompleteTest?: (protocol: ZeroGTestProtocol) => void;
-  compact?: boolean;
 }
 
 export const ZeroGTestCard: React.FC<ZeroGTestCardProps> = ({
   protocol,
   onCompleteTest,
-  compact = false,
 }) => {
   const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'done'>('idle');
 
@@ -22,85 +20,100 @@ export const ZeroGTestCard: React.FC<ZeroGTestCardProps> = ({
       if (onCompleteTest) {
         onCompleteTest(protocol);
       }
-    }, 900);
+    }, 850);
   };
 
   return (
-    <div
-      className={`rounded-2xl border-2 border-sky-300 dark:border-cyan-700/80 bg-gradient-to-br from-sky-50 via-white to-amber-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 ${
-        compact ? 'p-4' : 'p-5 sm:p-6'
-      }`}
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+    <div className="rounded-3xl border-2 border-amber-300 dark:border-amber-500/60 bg-amber-50/98 dark:bg-slate-900 shadow-sm p-3.5 sm:p-4 flex flex-col gap-2">
+      {/* Compact Space Test Header */}
+      <div className="flex flex-wrap items-start justify-between gap-2 pb-2 border-b border-dashed border-amber-300 dark:border-slate-700">
         <div>
-          <p className="text-xs font-semibold text-sky-700 dark:text-cyan-300">
-            Zero-Gravity Optical Protocol · {protocol.wavelengthNm}
+          <p className="text-[11px] font-bold text-orange-600 dark:text-amber-300 flex items-center gap-1.5">
+            <Sparkles className="w-3 h-3" aria-hidden="true" />
+            <span>Space Test Card · {protocol.wavelengthNm}</span>
           </p>
-          <h4 className="font-display text-lg font-bold text-orange-bordered-sm mt-0.5">
+          <h4 className="font-display text-base sm:text-lg font-bold text-orange-bordered-sm leading-tight mt-0.5">
             {protocol.name}
           </h4>
         </div>
-        <span className="inline-flex items-center gap-1.5 text-xs font-mono-tabular font-semibold text-sky-900 dark:text-sky-200">
-          <Timer className="w-3.5 h-3.5 text-orange-500" aria-hidden="true" />
-          {protocol.durationSec}s scan
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl bg-white dark:bg-slate-800 border border-amber-300 dark:border-slate-700 text-[11px] font-mono-tabular font-semibold text-sky-900 dark:text-sky-200 shrink-0">
+          <Clock className="w-3 h-3 text-orange-500" aria-hidden="true" />
+          {protocol.durationSec}s
         </span>
       </div>
 
-      <p className="text-xs sm:text-sm text-sky-900/90 dark:text-slate-300 leading-relaxed mb-3">
-        <strong className="font-semibold text-sky-950 dark:text-white">Why it works in 0-G: </strong>
+      <p className="text-[11px] sm:text-xs text-sky-900 dark:text-slate-300 leading-snug">
         {protocol.zeroGPrinciple}
       </p>
 
-      <div className="text-xs text-sky-800 dark:text-slate-400 mb-3">
-        <span className="font-semibold text-sky-950 dark:text-slate-200">Hardware: </span>
-        {protocol.hardware}
-        <span className="mx-2" aria-hidden="true">·</span>
-        <span className="font-semibold text-sky-950 dark:text-slate-200">Nominal: </span>
-        <span className="font-mono-tabular">{protocol.normalReadingRange}</span>
+      {/* Compact Gear Needed Row */}
+      <div className="rounded-xl bg-white dark:bg-slate-800/80 border border-sky-200 dark:border-slate-700 px-2.5 py-2">
+        <div className="text-[11px] font-bold text-sky-950 dark:text-amber-200 mb-0.5">
+          What You Need ({protocol.hardware})
+        </div>
+        <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-sky-900 dark:text-slate-300">
+          {protocol.ingredients.map((item) => (
+            <li key={item} className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" aria-hidden="true" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <ol className="space-y-2 mb-4">
+      {/* Compact Numbered Steps */}
+      <div className="space-y-1">
         {protocol.steps.map((step, idx) => (
-          <li
+          <div
             key={idx}
-            className="flex items-start gap-2.5 text-xs sm:text-sm text-sky-950 dark:text-slate-200 leading-snug"
+            className="flex items-start gap-2 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-800/60 border border-amber-200/90 dark:border-slate-700 text-[11px] sm:text-xs text-sky-950 dark:text-slate-200 leading-snug"
           >
-            <span className="font-mono-tabular font-bold text-orange-600 dark:text-amber-300 shrink-0 mt-0.5">
-              0{idx + 1}.
+            <span className="font-display font-bold text-orange-600 dark:text-amber-300 shrink-0">
+              {idx + 1}.
             </span>
             <span>{step}</span>
-          </li>
+          </div>
         ))}
-      </ol>
+      </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-sky-200 dark:border-slate-700">
-        <span className="text-xs text-sky-700 dark:text-slate-400">
-          Light-based non-invasive telemetry
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-amber-200 dark:border-slate-700">
+        <div className="space-y-0.5">
+          <div className="text-[11px] font-mono-tabular text-sky-800 dark:text-slate-400">
+            Healthy Goal: {protocol.normalReadingRange}
+          </div>
+          <a
+            href="https://www.nasa.gov/hrp/"
+            target="_blank"
+            rel="noreferrer"
+            className="block text-[10px] text-sky-700 dark:text-cyan-300 hover:underline"
+          >
+            Source: NASA HRP — Light-Based Zero-G Countermeasures
+          </a>
+        </div>
         <button
           type="button"
           onClick={handleRunOpticalScan}
           disabled={scanStatus === 'scanning'}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             scanStatus === 'done'
               ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-400'
-              : 'bg-amber-300 hover:bg-amber-400 text-orange-950 border border-orange-500'
+              : 'bg-amber-300 hover:bg-amber-400 text-orange-950 border-2 border-orange-500'
           }`}
         >
           {scanStatus === 'scanning' ? (
             <>
-              <SunMedium className="w-4 h-4 animate-spin text-orange-700" aria-hidden="true" />
-              <span>Calibrating Optical Sensor...</span>
+              <SunMedium className="w-3.5 h-3.5 animate-spin text-orange-700" aria-hidden="true" />
+              <span>Running Check...</span>
             </>
           ) : scanStatus === 'done' ? (
             <>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
-              <span>Scan Logged (+Star Earned)</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+              <span>Done! (+1 Star)</span>
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 text-orange-700" aria-hidden="true" />
-              <span>Run Light Scan &amp; Log</span>
+              <Sparkles className="w-3.5 h-3.5 text-orange-700" aria-hidden="true" />
+              <span>Mark Done &amp; Earn +1 Star</span>
             </>
           )}
         </button>

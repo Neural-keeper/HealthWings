@@ -36,7 +36,7 @@ export const DrPiscesAlertToast: React.FC<DrPiscesAlertToastProps> = ({
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-orange-700 dark:text-amber-300">
-                Dr. Pisces Priority Alert · {criticalMetric.severity}
+                Dr. Pisces Quick Task · {criticalMetric.severity}
               </p>
               <h3 className="font-display text-lg font-bold text-sky-950 dark:text-white leading-snug">
                 {criticalMetric.metricName}: {criticalMetric.currentReading}
@@ -53,7 +53,7 @@ export const DrPiscesAlertToast: React.FC<DrPiscesAlertToastProps> = ({
           </div>
 
           <p className="text-xs text-sky-900 dark:text-slate-300 mt-1 leading-relaxed">
-            Target is <span className="font-mono-tabular font-semibold">{criticalMetric.targetReading}</span>.{' '}
+            Healthy Goal: <span className="font-mono-tabular font-semibold">{criticalMetric.targetReading}</span>.{' '}
             {suggestedTask.instructions}
           </p>
 

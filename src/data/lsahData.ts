@@ -1,10 +1,10 @@
 export type MissionPhase = 'Pre-Flight' | 'In-Flight' | 'Post-Flight';
 export type BodySystemId = 'immune' | 'metabolism' | 'mental' | 'circulation' | 'neuro_ocular';
-export type HealthStatus = 'Nominal' | 'Watch' | 'Critical';
+export type HealthStatus = 'Healthy' | 'Watch' | 'Needs Care';
 
 export interface ScatterPoint {
   id: string;
-  flightDay: number; // -30 (Pre), 1..180 (In-flight), 185..210 (Post)
+  flightDay: number;
   phase: MissionPhase;
   value: number;
   cohortMean: number;
@@ -22,7 +22,6 @@ export interface BenchmarkMetric {
   healthyMax: number;
   scaleMin: number;
   scaleMax: number;
-  higherIsBetter?: boolean; // undefined means middle range [healthyMin, healthyMax] is optimal
   lsahCohortNote: string;
 }
 
@@ -32,6 +31,9 @@ export interface BodySystemProfile {
   shortName: string;
   wingSide: 'mental' | 'physical';
   lsahStudyRef: string;
+  sourceName: string;
+  dataName: string;
+  sourceUrl: string;
   summary: string;
   primaryUnit: string;
   primaryMetricId: string;
@@ -48,6 +50,7 @@ export interface ZeroGTestProtocol {
   targetSystems: BodySystemId[];
   zeroGPrinciple: string;
   hardware: string;
+  ingredients: string[];
   steps: string[];
   normalReadingRange: string;
 }
@@ -63,8 +66,8 @@ export interface AstronautBiometrics {
   flightDay: number;
   moodScore: number; // 1..10
   sleepHours: number; // 3..10
-  stressLevel: number; // 1..10 (higher = more stressed)
-  exerciseMinutes: number; // 0..150 (ARED + T2 + CEVIS)
+  stressLevel: number; // 1..10
+  exerciseMinutes: number; // 0..150
   hydrationLiters: number; // 0.8..4.0
   hrvRmssd: number; // 15..95 ms
   restingHr: number; // 45..105 bpm
@@ -87,96 +90,121 @@ export interface PlanetMilestone {
 }
 
 export const NASA_SYMPTOMS: SymptomOption[] = [
-  { id: 'visual_blur', label: 'Near-vision blur or halos', category: 'physical', lsahCorrelate: 'SANS Optic Disc Edema' },
-  { id: 'headache', label: 'Frontal pressure headache', category: 'physical', lsahCorrelate: 'Cephalad Fluid Shift' },
-  { id: 'fatigue', label: 'Daytime fatigue / sluggishness', category: 'mental', lsahCorrelate: 'Circadian Phase Drift' },
-  { id: 'insomnia', label: 'Fragmented sleep (< 6h)', category: 'mental', lsahCorrelate: 'Melatonin Suppression' },
-  { id: 'dizziness', label: 'Lightheaded during movement', category: 'physical', lsahCorrelate: 'Plasma Volume / Orthostatic Drop' },
-  { id: 'skin_flare', label: 'Skin rash or nasal congestion', category: 'physical', lsahCorrelate: 'Immune Cytokine Shift' },
-  { id: 'low_mood', label: 'Low mood or isolation strain', category: 'mental', lsahCorrelate: 'POMS Affect Decline' },
-  { id: 'muscle_ache', label: 'Caloric drop / muscle soreness', category: 'physical', lsahCorrelate: 'ARED Load & Vitamin D Deficit' },
+  { id: 'visual_blur', label: 'Blurry close-up vision', category: 'physical', lsahCorrelate: 'Eye fluid pressure shift' },
+  { id: 'headache', label: 'Head or forehead pressure', category: 'physical', lsahCorrelate: 'Upper-body fluid shift' },
+  { id: 'fatigue', label: 'Tired or low energy', category: 'mental', lsahCorrelate: 'Sleep clock drift' },
+  { id: 'insomnia', label: 'Hard to stay asleep', category: 'mental', lsahCorrelate: 'Light cycle disruption' },
+  { id: 'dizziness', label: 'Dizzy or lightheaded', category: 'physical', lsahCorrelate: 'Lower hydration or blood flow' },
+  { id: 'skin_flare', label: 'Stuffy nose or skin irritation', category: 'physical', lsahCorrelate: 'Immune dip in cabin' },
+  { id: 'low_mood', label: 'Feeling down or stressed', category: 'mental', lsahCorrelate: 'Mood survey dip' },
+  { id: 'muscle_ache', label: 'Sore muscles or low appetite', category: 'physical', lsahCorrelate: 'Exercise & Vitamin D need' },
 ];
 
 export const ZERO_G_LIGHT_TESTS: ZeroGTestProtocol[] = [
   {
     id: 'optical_ppg_hrv',
-    name: 'Optical PPG & HRV Cabin-LED Scan',
-    wavelengthNm: '525 nm Green + 660 nm Red',
+    name: 'Finger Light Pulse Check',
+    wavelengthNm: 'Green & Red LED Light',
     durationSec: 60,
     targetSystems: ['circulation', 'mental'],
-    zeroGPrinciple: 'Measures capillary pulse wave transit via skin reflectance—requires zero gravity-dependent mercury cuffs or venous pooling.',
-    hardware: 'Crew Wrist Photodiode + Cabin Diffuse LED',
-    steps: [
-      'Anchor feet under cabin handrail to eliminate micro-drift during the 60-second optical capture.',
-      'Hold index fingertip gently against the 525 nm optical window—do not press hard enough to blanch capillaries.',
-      'Breathe at a steady 6-breaths/min cadence while the photodiode samples pulse intervals (RMSSD).',
-      'Confirm green optical lock tone and sync waveform to Pisces telemetry.',
+    zeroGPrinciple: 'Shines gentle green light on your fingertip to measure heart rate and recovery—no gravity or blood pressure cuff needed.',
+    hardware: 'Wrist Light Sensor',
+    ingredients: [
+      'Wrist light sensor clip',
+      'Handrail foot loop (to float steady)',
+      '60 seconds of calm breathing',
     ],
-    normalReadingRange: 'HR 52–74 bpm · HRV RMSSD 42–82 ms',
+    steps: [
+      'Hook your feet under a handrail so you stay floating in one spot.',
+      'Rest your fingertip gently on the green light window without squeezing.',
+      'Breathe slowly in and out for 60 seconds while the light reads your pulse.',
+      'Tap "Mark Done" below to save your reading and earn a star.',
+    ],
+    normalReadingRange: 'Heart Rate 52–74 bpm · Recovery 42–82 ms',
   },
   {
     id: 'spectral_retinal_oct',
-    name: 'Portable Spectral Retinal OCT Scan',
-    wavelengthNm: '840 nm Near-Infrared SLD',
+    name: 'Eye & Head Fluid Light Scan',
+    wavelengthNm: 'Near-Infrared Eye Light',
     durationSec: 90,
     targetSystems: ['neuro_ocular', 'circulation'],
-    zeroGPrinciple: 'Low-coherence interferometry maps retinal nerve fiber & choroidal thickness using pure light back-scatter without eye contact or gravity.',
-    hardware: 'ISS Spectralis-Lite Head-Mounted OCT',
-    steps: [
-      'Secure the elastic occipital strap so the optical aperture floats stably 18 mm from the cornea.',
-      'Fixate on the internal amber crosshair target inside the eyepiece for 15 seconds per eye.',
-      'Trigger the 840 nm cross-sectional raster sweep across the optic nerve head and macula.',
-      'Inspect choroidal thickness delta against your pre-flight L-30 baseline.',
+    zeroGPrinciple: 'Uses safe invisible light to peek at the back of your eye and spot fluid buildup without touching your eye or needing gravity.',
+    hardware: 'Head-Strap Eye Scanner',
+    ingredients: [
+      'Head-strap eye viewer',
+      'Soft elastic strap',
+      '90 seconds looking at target dot',
     ],
-    normalReadingRange: 'Choroidal Delta < +25 μm · IOP 11–18 mmHg',
+    steps: [
+      'Slip the soft strap around your head so the eye viewer floats steadily in front of you.',
+      'Look straight at the glowing yellow dot inside for 15 seconds per eye.',
+      'Press the side scan button to let the gentle light take a picture of your eye fluid.',
+      'Save the scan to see how your eye thickness compares to Earth baseline.',
+    ],
+    normalReadingRange: 'Eye Fluid Shift under +25 μm',
   },
   {
     id: 'blue_pupillometry',
-    name: '480 nm Blue-Light Pupillometry Assay',
-    wavelengthNm: '480 nm Melanopsin Blue',
+    name: 'Blue-Light Alertness Check',
+    wavelengthNm: 'Soft Blue Light Flash',
     durationSec: 45,
     targetSystems: ['mental', 'neuro_ocular'],
-    zeroGPrinciple: 'Quantifies melanopsin retinal ganglion reflex & cognitive alertness via non-contact infrared pupil tracking in dark sleep stations.',
-    hardware: 'Sleep-Quarter Optical Visor',
-    steps: [
-      'Dim cabin module shutters or enter crew sleep station for 30 seconds of dark adaptation.',
-      'Position the optical visor gently over brow ridge and tap Start Flash Assay.',
-      'Keep eyes open during three 1-second 480 nm calibrated blue-light pulses.',
-      'Tap the right thumb trigger immediately upon visual flash confirmation for PVT reaction timing.',
+    zeroGPrinciple: 'Uses a quick blue light flash in your sleep station to measure how awake and rested your brain clock is.',
+    hardware: 'Sleep-Station Light Visor',
+    ingredients: [
+      'Sleep-station light visor',
+      'Darkened sleep bay',
+      '45 seconds of focus',
     ],
-    normalReadingRange: 'Pupil Latency 190–255 ms · PVT < 285 ms',
+    steps: [
+      'Close your sleep bay curtain and let your eyes rest in the dim light for 20 seconds.',
+      'Put on the light visor lightly over your eyebrows.',
+      'Keep eyes open during three quick, gentle blue flashes and tap the thumb button each time.',
+      'Log your score to check if your sleep clock is synced.',
+    ],
+    normalReadingRange: 'Reaction Speed under 285 ms',
   },
   {
     id: 'transcutaneous_photometry',
-    name: 'Transcutaneous Spectral Photometry (TSP)',
-    wavelengthNm: '450–940 nm Multi-Spectral LED',
+    name: 'Skin Light Nutrition Check',
+    wavelengthNm: 'Multi-Color Skin Light',
     durationSec: 50,
     targetSystems: ['metabolism', 'immune'],
-    zeroGPrinciple: 'Non-invasive broadband skin spectroscopy estimates tissue oxygenation, bilirubin, and oxidative stress markers without centrifuge blood draws.',
-    hardware: 'Handheld Dermal Spectrometer',
-    steps: [
-      'Wipe inner forearm test site with sterile dry pad to remove floating skin oils.',
-      'Hold spectrometer flush against forearm using light spring-clip band (no gravity pressure needed).',
-      'Run 5-wavelength reflectance sweep across 450 nm, 577 nm, 660 nm, 810 nm, and 940 nm.',
-      'Review estimated metabolic & inflammatory chromophore index in Pisces.',
+    zeroGPrinciple: 'Bounces 5 harmless colors of light off your forearm skin to estimate nutrition, oxygen, and immune balance—no needle poke needed.',
+    hardware: 'Handheld Skin Light Wand',
+    ingredients: [
+      'Dry clean wipe',
+      'Handheld skin light wand',
+      'Soft spring band',
     ],
-    normalReadingRange: 'Tissue StO2 68–84% · Inflammatory Index < 1.35',
+    steps: [
+      'Pat the inside of your forearm dry with a clean cloth.',
+      'Clip the light wand gently against your forearm with the soft band.',
+      'Press Start and hold still for 50 seconds while the 5 gentle colors flash.',
+      'Save your nutrition and immune check when the chime sounds.',
+    ],
+    normalReadingRange: 'Skin Oxygen 68–84% · Balanced Immune Score',
   },
   {
     id: 'fnirs_cerebral',
-    name: 'fNIRS Prefrontal Light Oxygenation Cap',
-    wavelengthNm: '730 nm & 850 nm Dual NIR',
+    name: 'Forehead Brain Oxygen Check',
+    wavelengthNm: 'Soft Near-Infrared Headband',
     durationSec: 75,
     targetSystems: ['mental', 'circulation'],
-    zeroGPrinciple: 'Near-infrared photons penetrate 2 cm into prefrontal cortex to measure oxy/deoxy-hemoglobin ratios without supine gravity assumptions.',
-    hardware: 'Soft-Band fNIRS Optode Strip',
-    steps: [
-      'Fasten the soft neoprene optode strip smoothly across the forehead above the brow.',
-      'Tether floating cable clip to flight suit collar so microgravity movement adds zero motion artifact.',
-      'Complete the 60-second paced memory sequence while NIR optodes log cortical oxygenation.',
-      'Upload cortical HbO2 recovery curve to NASA LSAH mission log.',
+    zeroGPrinciple: 'Soft light sensors on your forehead track oxygen flow while your brain solves a quick puzzle in zero gravity.',
+    hardware: 'Soft Light Headband',
+    ingredients: [
+      'Soft fabric light headband',
+      'Collar cable clip',
+      '75 seconds calm focus',
     ],
-    normalReadingRange: 'Prefrontal HbO2 Saturation 64–78%',
+    steps: [
+      'Wrap the soft light headband comfortably across your forehead.',
+      'Clip the thin cord to your collar so it does not float around.',
+      'Follow the 60-second memory chime while the forehead sensors record oxygen.',
+      'Tap "Mark Done" to save your focus and brain flow score.',
+    ],
+    normalReadingRange: 'Brain Oxygen 64–78%',
   },
 ];
 
@@ -203,8 +231,8 @@ export const SOLAR_SYSTEM_PLANETS: PlanetMilestone[] = [
     orbitRadiusPx: 54,
     orbitSpeedSec: 12,
     color: '#CBD5E1',
-    healthBadge: 'Hydration & Baseline Check',
-    description: 'First orbital check-in logged with Dr. Pisces.',
+    healthBadge: 'First Check-In',
+    description: 'You completed your first healthy check-in with Dr. Pisces.',
   },
   {
     index: 2,
@@ -214,8 +242,8 @@ export const SOLAR_SYSTEM_PLANETS: PlanetMilestone[] = [
     orbitRadiusPx: 78,
     orbitSpeedSec: 17,
     color: '#FDE68A',
-    healthBadge: 'Circadian Light Sync',
-    description: 'Blue-light pupillometry & sleep cycle stabilized.',
+    healthBadge: 'Sleep Clock Sync',
+    description: 'Your sleep cycle and alertness check are getting steady.',
   },
   {
     index: 3,
@@ -225,8 +253,8 @@ export const SOLAR_SYSTEM_PLANETS: PlanetMilestone[] = [
     orbitRadiusPx: 105,
     orbitSpeedSec: 23,
     color: '#60A5FA',
-    healthBadge: 'Cardio & HRV Balance',
-    description: 'Optical PPG heart rate variability within crew target.',
+    healthBadge: 'Heart & Pulse Ready',
+    description: 'Your pulse and hydration levels are looking balanced.',
   },
   {
     index: 4,
@@ -236,8 +264,8 @@ export const SOLAR_SYSTEM_PLANETS: PlanetMilestone[] = [
     orbitRadiusPx: 132,
     orbitSpeedSec: 30,
     color: '#FB923C',
-    healthBadge: 'ARED Resistance Quota',
-    description: 'Daily microgravity strength countermeasures completed.',
+    healthBadge: 'Daily Workout Goal',
+    description: 'You hit your daily strength and cardio routine in space.',
   },
   {
     index: 5,
@@ -247,8 +275,8 @@ export const SOLAR_SYSTEM_PLANETS: PlanetMilestone[] = [
     orbitRadiusPx: 168,
     orbitSpeedSec: 42,
     color: '#FDBA74',
-    healthBadge: 'Immune Resilience',
-    description: 'NK-cell defense & stress cortisol within healthy adult bounds.',
+    healthBadge: 'Strong Immunity',
+    description: 'Your immune defense and stress levels stay in the healthy zone.',
   },
   {
     index: 6,
@@ -259,8 +287,8 @@ export const SOLAR_SYSTEM_PLANETS: PlanetMilestone[] = [
     orbitSpeedSec: 54,
     color: '#FCD34D',
     ring: true,
-    healthBadge: 'Vitamin D & Bone Density',
-    description: 'Metabolic & bone resorption biomarkers stabilized.',
+    healthBadge: 'Vitamin D & Bones',
+    description: 'Nutrition and bone-health habits are steady.',
   },
   {
     index: 7,
@@ -270,8 +298,8 @@ export const SOLAR_SYSTEM_PLANETS: PlanetMilestone[] = [
     orbitRadiusPx: 242,
     orbitSpeedSec: 68,
     color: '#7DD3FC',
-    healthBadge: 'SANS Ocular Clearance',
-    description: '840 nm OCT choroidal thickness verified in safe zone.',
+    healthBadge: 'Eye Fluid Clear',
+    description: 'Your eye light scan shows healthy fluid balance.',
   },
   {
     index: 8,
@@ -281,49 +309,51 @@ export const SOLAR_SYSTEM_PLANETS: PlanetMilestone[] = [
     orbitRadiusPx: 276,
     orbitSpeedSec: 82,
     color: '#818CF8',
-    healthBadge: 'Full 8-Planet Peak Readiness',
-    description: 'All Mental & Physical wing bars balanced for long-duration flight.',
+    healthBadge: 'Full 8-Planet Crew Health',
+    description: 'Both Mental and Physical wings are glowing strong!',
   },
 ];
 
-// Deterministic NASA LSAH longitudinal cohort data generator (FD -30 to FD +210)
 export function buildBodySystems(bio: AstronautBiometrics): BodySystemProfile[] {
   const sleepScore = Math.min(100, Math.round((bio.sleepHours / 8) * 100));
 
   return [
     {
       id: 'immune',
-      name: 'Immune System & Viral Defense',
+      name: 'Immune Strength',
       shortName: 'Immune',
       wingSide: 'physical',
-      lsahStudyRef: 'NASA LSAH ISS-Immune Cohort (N=48)',
+      lsahStudyRef: 'NASA LSAH Crew Immune Data (48 astronauts)',
+      sourceName: 'NASA LSAH / LSDA',
+      dataName: 'ISS Crew NK-Cell Cytotoxicity & Salivary IgA Reference Trajectory',
+      sourceUrl: 'https://nlsp.nasa.gov/resources/lsah',
       summary:
-        'Microgravity alters lymphocyte distribution and reactivates latent herpesviruses. Tracking NK-cell cytotoxicity alongside salivary cortisol/IgA catches immune drift early.',
+        'Living in space can temporarily quiet your body’s natural fighter cells. Tracking immune strength helps catch colds or flare-ups early.',
       primaryUnit: '%',
       primaryMetricId: 'nk_cell',
       recommendedTestId: 'transcutaneous_photometry',
       benchmarks: [
         {
           id: 'nk_cell',
-          label: 'NK-Cell Cytotoxicity',
+          label: 'Natural Fighter Cell Activity',
           unit: '%',
           currentValue: bio.nkCellActivity,
           healthyMin: 38,
           healthyMax: 62,
           scaleMin: 10,
           scaleMax: 75,
-          lsahCohortNote: 'Healthy ground adults average 40–60%; in-flight ISS nadir typically occurs around FD-60 to FD-110.',
+          lsahCohortNote: 'Healthy adults on Earth stay around 38–62%.',
         },
         {
           id: 'salivary_iga',
-          label: 'Salivary IgA / Cortisol Ratio',
-          unit: 'ratio',
+          label: 'Saliva Immune Protection Score',
+          unit: 'pts',
           currentValue: Number((1.65 - bio.stressLevel * 0.08 + bio.sleepHours * 0.05).toFixed(2)),
           healthyMin: 1.25,
           healthyMax: 2.2,
           scaleMin: 0.4,
           scaleMax: 2.6,
-          lsahCohortNote: 'Drops below 1.15 correlate with elevated upper-respiratory irritation in closed habitats.',
+          lsahCohortNote: 'Higher sleep and lower stress keep this score strong.',
         },
       ],
       scatterSeries: [
@@ -345,37 +375,40 @@ export function buildBodySystems(bio: AstronautBiometrics): BodySystemProfile[] 
     },
     {
       id: 'metabolism',
-      name: 'Metabolism, Vitamin D & Bone Turnover',
-      shortName: 'Metabolism',
+      name: 'Nutrition & Bones',
+      shortName: 'Nutrition',
       wingSide: 'physical',
-      lsahStudyRef: 'NASA LSAH Nutritional & Bone Biochemistry Archive',
+      lsahStudyRef: 'NASA LSAH Nutrition & Bone Archive',
+      sourceName: 'NASA LSAH & OSDR',
+      dataName: 'Nutritional Biochemistry 25-OH Vitamin D & Bone Resorption (NTx) Curves',
+      sourceUrl: 'https://osdr.nasa.gov/',
       summary:
-        'Without solar UVB and gravitational loading, 25-OH Vitamin D and bone calcium balance decline unless ARED resistance and supplementation stay locked in.',
+        'Without sunlight or gravity pulling on your legs, Vitamin D and bone minerals need daily resistance workouts and nutrition care.',
       primaryUnit: 'ng/mL',
       primaryMetricId: 'vit_d',
       recommendedTestId: 'transcutaneous_photometry',
       benchmarks: [
         {
           id: 'vit_d',
-          label: '25-OH Vitamin D',
+          label: 'Vitamin D Level',
           unit: 'ng/mL',
           currentValue: bio.vitaminD,
           healthyMin: 30,
           healthyMax: 55,
           scaleMin: 10,
           scaleMax: 70,
-          lsahCohortNote: 'LSAH clinical target is >= 30 ng/mL to protect trabecular bone mineral density.',
+          lsahCohortNote: 'Healthy adults stay at 30 ng/mL or higher to protect bones.',
         },
         {
           id: 'bone_ntx',
-          label: 'Bone Resorption (NTx)',
-          unit: 'nmol/mmol',
+          label: 'Bone Mineral Loss Marker',
+          unit: 'units',
           currentValue: Math.round(78 - bio.exerciseMinutes * 0.25),
           healthyMin: 25,
           healthyMax: 54,
           scaleMin: 15,
           scaleMax: 95,
-          lsahCohortNote: 'Daily ARED resistance >= 90 min suppresses excess bone calcium mobilization.',
+          lsahCohortNote: 'Daily space exercise keeps bone loss low.',
         },
       ],
       scatterSeries: [
@@ -394,37 +427,40 @@ export function buildBodySystems(bio: AstronautBiometrics): BodySystemProfile[] 
     },
     {
       id: 'mental',
-      name: 'Mental Health, Sleep & Circadian Rhythm',
-      shortName: 'Mental',
+      name: 'Mood & Sleep',
+      shortName: 'Mood & Sleep',
       wingSide: 'mental',
-      lsahStudyRef: 'NASA LSAH Behavioral Health & Sleep Actigraphy',
+      lsahStudyRef: 'NASA LSAH Sleep & Mood Study',
+      sourceName: 'NASA HRP & LSAH',
+      dataName: 'ISS Sleep Actigraphy Efficiency & POMS Behavioral Mood Baselines',
+      sourceUrl: 'https://www.nasa.gov/hrp/',
       summary:
-        'Orbital sunrises occur every 90 minutes. Monitoring sleep efficiency, mood surveys, and psychomotor vigilance prevents third-quarter mission fatigue.',
+        'In orbit, the sun rises every 90 minutes! Keeping track of sleep quality and mood helps your brain stay sharp and cheerful.',
       primaryUnit: '%',
       primaryMetricId: 'sleep_eff',
       recommendedTestId: 'blue_pupillometry',
       benchmarks: [
         {
           id: 'sleep_eff',
-          label: 'Sleep Efficiency Index',
+          label: 'Sleep Quality Score',
           unit: '%',
           currentValue: sleepScore,
           healthyMin: 80,
           healthyMax: 96,
           scaleMin: 40,
           scaleMax: 100,
-          lsahCohortNote: 'ISS astronauts average 6.1–6.5h sleep vs. 7.5–8.2h pre-flight baseline.',
+          lsahCohortNote: 'Astronauts often get ~6.2 hours in space vs. ~7.8 hours on Earth.',
         },
         {
           id: 'mood_composite',
-          label: 'Mood & Affect Stability',
+          label: 'Overall Mood Balance',
           unit: 'pts',
           currentValue: Math.round(bio.moodScore * 10 - bio.stressLevel * 1.5),
           healthyMin: 68,
           healthyMax: 95,
           scaleMin: 20,
           scaleMax: 100,
-          lsahCohortNote: 'Composite derived from Profile of Mood States (POMS) vigor vs. fatigue subscales.',
+          lsahCohortNote: 'Combines your daily mood check-in and stress rating.',
         },
       ],
       scatterSeries: [
@@ -444,26 +480,29 @@ export function buildBodySystems(bio: AstronautBiometrics): BodySystemProfile[] 
     },
     {
       id: 'circulation',
-      name: 'Circulation, HRV & Vascular Conditioning',
-      shortName: 'Circulation',
+      name: 'Heart & Blood Flow',
+      shortName: 'Heart Flow',
       wingSide: 'physical',
-      lsahStudyRef: 'NASA LSAH Cardiovascular & Orthostatic Registry',
+      lsahStudyRef: 'NASA LSAH Heart & Circulation Data',
+      sourceName: 'NASA LSAH Cardiovascular Registry',
+      dataName: 'Microgravity HRV (RMSSD) & Resting Heart Rate Cohort Curve',
+      sourceUrl: 'https://nlsp.nasa.gov/resources/lsah',
       summary:
-        'Without hydrostatic pressure gradients, plasma volume contracts by 10–15% in week one. Optical PPG tracks autonomic HRV recovery and vascular readiness.',
+        'Without gravity pulling blood downward, your heart works differently and needs extra hydration to keep pulse recovery strong.',
       primaryUnit: 'ms',
       primaryMetricId: 'hrv_rmssd',
       recommendedTestId: 'optical_ppg_hrv',
       benchmarks: [
         {
           id: 'hrv_rmssd',
-          label: 'HRV RMSSD (Optical PPG)',
+          label: 'Heart Beat Recovery (HRV)',
           unit: 'ms',
           currentValue: bio.hrvRmssd,
           healthyMin: 42,
           healthyMax: 82,
           scaleMin: 15,
           scaleMax: 100,
-          lsahCohortNote: 'Higher RMSSD reflects strong vagal parasympathetic tone and hydration readiness.',
+          lsahCohortNote: 'Higher numbers mean your heart and body are well rested and hydrated.',
         },
         {
           id: 'resting_hr',
@@ -474,7 +513,7 @@ export function buildBodySystems(bio: AstronautBiometrics): BodySystemProfile[] 
           healthyMax: 74,
           scaleMin: 40,
           scaleMax: 110,
-          lsahCohortNote: 'Sustained HR > 80 bpm in microgravity signals dehydration or plasma volume contraction.',
+          lsahCohortNote: 'Resting pulse over 80 bpm can mean you need water or rest.',
         },
       ],
       scatterSeries: [
@@ -493,37 +532,40 @@ export function buildBodySystems(bio: AstronautBiometrics): BodySystemProfile[] 
     },
     {
       id: 'neuro_ocular',
-      name: 'Neuro-Ocular & SANS Monitoring',
-      shortName: 'Neuro-Ocular',
+      name: 'Eyes & Head Fluid',
+      shortName: 'Eye Fluid',
       wingSide: 'physical',
-      lsahStudyRef: 'NASA LSAH Spaceflight-Associated Neuro-Ocular Syndrome (SANS)',
+      lsahStudyRef: 'NASA LSAH Vision & Eye Fluid Study',
+      sourceName: 'NASA HRP SANS Program',
+      dataName: 'Choroidal Thickness Shift & Intraocular Pressure OCT Reference Data',
+      sourceUrl: 'https://www.nasa.gov/hrp/',
       summary:
-        'Headward fluid shifts raise choroidal thickness and flatten the posterior sclera. Non-contact 840 nm OCT light scans track SANS progression safely in orbit.',
+        'Floating in zero gravity lets gentle body fluids drift upward toward your head and eyes. Quick light scans keep your vision protected.',
       primaryUnit: 'μm',
       primaryMetricId: 'choroidal',
       recommendedTestId: 'spectral_retinal_oct',
       benchmarks: [
         {
           id: 'choroidal',
-          label: 'Choroidal Thickness Shift',
+          label: 'Back-of-Eye Fluid Shift',
           unit: 'μm',
           currentValue: bio.choroidalDeltaUm,
           healthyMin: 0,
           healthyMax: 25,
           scaleMin: 0,
           scaleMax: 95,
-          lsahCohortNote: 'Shifts > +35 μm warrant targeted 840 nm OCT follow-up and lower-body fluid countermeasures.',
+          lsahCohortNote: 'Keeping this shift below +25 μm helps prevent blurry near vision.',
         },
         {
           id: 'iop',
-          label: 'Estimated Intraocular Pressure',
+          label: 'Eye Pressure Estimate',
           unit: 'mmHg',
           currentValue: Math.round(13 + bio.choroidalDeltaUm * 0.14),
           healthyMin: 11,
           healthyMax: 19,
           scaleMin: 8,
           scaleMax: 28,
-          lsahCohortNote: 'Monitored alongside optic disc morphology during months 2–6.',
+          lsahCohortNote: 'Checked gently with light throughout your mission.',
         },
       ],
       scatterSeries: [
@@ -544,7 +586,7 @@ export function buildBodySystems(bio: AstronautBiometrics): BodySystemProfile[] 
 
 export function getBenchmarkStatus(m: BenchmarkMetric): HealthStatus {
   if (m.currentValue >= m.healthyMin && m.currentValue <= m.healthyMax) {
-    return 'Nominal';
+    return 'Healthy';
   }
   const span = m.healthyMax - m.healthyMin || 10;
   const dist =
@@ -552,61 +594,63 @@ export function getBenchmarkStatus(m: BenchmarkMetric): HealthStatus {
       ? m.healthyMin - m.currentValue
       : m.currentValue - m.healthyMax;
   if (dist > span * 0.45) {
-    return 'Critical';
+    return 'Needs Care';
   }
   return 'Watch';
 }
 
-export interface WingBarMetric {
-  id: string;
-  label: string;
-  score: number; // 0..100
-  status: HealthStatus;
-  detail: string;
+export interface WingSpeedometerSummary {
+  mentalScore: number; // 0..100 overall at-a-glance Mental Health
+  physicalScore: number; // 0..100 overall at-a-glance Physical Health
+  overallActivityScore: number;
+  mentalBars: number[]; // 5 progressive speedometer segment fills (0..100 each)
+  physicalBars: number[]; // 5 progressive speedometer segment fills (0..100 each)
 }
 
-export function computeWingBars(bio: AstronautBiometrics, selectedSymptoms: string[]): {
-  mentalWing: WingBarMetric[];
-  physicalWing: WingBarMetric[];
-  overallActivityScore: number;
-} {
+function toSpeedometerBars(overallScore: number): number[] {
+  // 5 speedometer steps: 0-20, 20-40, 40-60, 60-80, 80-100
+  return [0, 20, 40, 60, 80].map((floor) => {
+    const pct = ((overallScore - floor) / 20) * 100;
+    return Math.max(0, Math.min(100, Math.round(pct)));
+  });
+}
+
+export function computeWingBars(
+  bio: AstronautBiometrics,
+  selectedSymptoms: string[]
+): WingSpeedometerSummary {
   const symPenalty = (ids: string[]) =>
-    ids.reduce((acc, id) => (selectedSymptoms.includes(id) ? acc + 12 : acc), 0);
+    ids.reduce((acc, id) => (selectedSymptoms.includes(id) ? acc + 9 : acc), 0);
 
-  // 5 Mental Wing bars (Left Wing - bottom small to top wide)
-  const moodVal = Math.max(10, Math.min(100, bio.moodScore * 10 - symPenalty(['low_mood'])));
-  const sleepVal = Math.max(10, Math.min(100, Math.round((bio.sleepHours / 8.2) * 100) - symPenalty(['insomnia'])));
-  const focusVal = Math.max(10, Math.min(100, Math.round(92 - bio.stressLevel * 4.2 - symPenalty(['fatigue']))));
-  const stressVal = Math.max(10, Math.min(100, Math.round(105 - bio.stressLevel * 8.5)));
-  const circadianVal = Math.max(10, Math.min(100, Math.round((sleepVal * 0.6 + moodVal * 0.4) - symPenalty(['fatigue', 'insomnia']) * 0.4)));
+  // Overall Mental Health at-a-glance score (mood, sleep, stress, mental symptoms)
+  const moodSub = bio.moodScore * 10;
+  const sleepSub = Math.min(100, Math.round((bio.sleepHours / 8.0) * 100));
+  const stressBufferSub = Math.max(10, 105 - bio.stressLevel * 8.5);
+  const rawMental =
+    moodSub * 0.38 +
+    sleepSub * 0.34 +
+    stressBufferSub * 0.28 -
+    symPenalty(['fatigue', 'insomnia', 'low_mood']);
+  const mentalScore = Math.max(8, Math.min(100, Math.round(rawMental)));
 
-  // 5 Physical Wing bars (Right Wing - bottom small to top wide)
-  const cardioVal = Math.max(10, Math.min(100, Math.round((bio.hrvRmssd / 72) * 65 + Math.max(0, 85 - bio.restingHr) * 0.7 - symPenalty(['dizziness']))));
-  const immuneVal = Math.max(10, Math.min(100, Math.round((bio.nkCellActivity / 52) * 95 - symPenalty(['skin_flare']))));
-  const metabolicVal = Math.max(10, Math.min(100, Math.round((bio.vitaminD / 42) * 75 + (bio.hydrationLiters / 2.8) * 25 - symPenalty(['muscle_ache']))));
-  const ocularVal = Math.max(10, Math.min(100, Math.round(100 - bio.choroidalDeltaUm * 1.1 - symPenalty(['visual_blur', 'headache']))));
-  const exerciseVal = Math.max(10, Math.min(100, Math.round((bio.exerciseMinutes / 105) * 100)));
+  // Overall Physical Health at-a-glance score (exercise, heart/HRV, immune, vitamin D, eyes, physical symptoms)
+  const cardioSub = Math.min(100, Math.round((bio.hrvRmssd / 70) * 65 + Math.max(0, 85 - bio.restingHr) * 0.7));
+  const immuneSub = Math.min(100, Math.round((bio.nkCellActivity / 50) * 95));
+  const metaSub = Math.min(100, Math.round((bio.vitaminD / 42) * 70 + (bio.hydrationLiters / 2.8) * 30));
+  const ocularSub = Math.max(15, Math.round(100 - bio.choroidalDeltaUm * 1.05));
+  const exerciseSub = Math.min(100, Math.round((bio.exerciseMinutes / 100) * 100));
+  const rawPhysical =
+    (cardioSub + immuneSub + metaSub + ocularSub + exerciseSub) / 5 -
+    symPenalty(['visual_blur', 'headache', 'dizziness', 'skin_flare', 'muscle_ache']) * 0.65;
+  const physicalScore = Math.max(8, Math.min(100, Math.round(rawPhysical)));
 
-  const toStatus = (v: number): HealthStatus => (v >= 70 ? 'Nominal' : v >= 45 ? 'Watch' : 'Critical');
+  const overallActivityScore = Math.round((mentalScore + physicalScore) / 2);
 
-  const mentalWing: WingBarMetric[] = [
-    { id: 'circadian', label: 'Circadian Sync', score: circadianVal, status: toStatus(circadianVal), detail: `${bio.sleepHours.toFixed(1)}h sleep cycle` },
-    { id: 'stress', label: 'Stress Buffer', score: stressVal, status: toStatus(stressVal), detail: `Strain ${bio.stressLevel}/10` },
-    { id: 'focus', label: 'Vigilance & Focus', score: focusVal, status: toStatus(focusVal), detail: 'PVT cognitive readiness' },
-    { id: 'sleep', label: 'Sleep Quality', score: sleepVal, status: toStatus(sleepVal), detail: `${sleepVal}% efficiency` },
-    { id: 'mood', label: 'Mood Stability', score: moodVal, status: toStatus(moodVal), detail: `Survey ${bio.moodScore}/10` },
-  ];
-
-  const physicalWing: WingBarMetric[] = [
-    { id: 'ocular', label: 'Neuro-Ocular SANS', score: ocularVal, status: toStatus(ocularVal), detail: `+${bio.choroidalDeltaUm} μm shift` },
-    { id: 'metabolic', label: 'Metabolic & Vit D', score: metabolicVal, status: toStatus(metabolicVal), detail: `${bio.vitaminD} ng/mL` },
-    { id: 'immune', label: 'Immune Defense', score: immuneVal, status: toStatus(immuneVal), detail: `${bio.nkCellActivity}% NK-cell` },
-    { id: 'exercise', label: 'ARED Activity', score: exerciseVal, status: toStatus(exerciseVal), detail: `${bio.exerciseMinutes} min/day` },
-    { id: 'cardio', label: 'Cardio & HRV', score: cardioVal, status: toStatus(cardioVal), detail: `${bio.hrvRmssd} ms RMSSD` },
-  ];
-
-  const allScores = [...mentalWing, ...physicalWing].map((b) => b.score);
-  const overallActivityScore = Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length);
-
-  return { mentalWing, physicalWing, overallActivityScore };
+  return {
+    mentalScore,
+    physicalScore,
+    overallActivityScore,
+    mentalBars: toSpeedometerBars(mentalScore),
+    physicalBars: toSpeedometerBars(physicalScore),
+  };
 }

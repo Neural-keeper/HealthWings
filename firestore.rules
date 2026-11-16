@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidBiometricsMap(bio) {
+      return bio is map
+        && bio.keys().hasAll([
+          'flightDay', 'moodScore', 'sleepHours', 'stressLevel',
+          'exerciseMinutes', 'hydrationLiters', 'hrvRmssd',
+          'restingHr', 'nkCellActivity', 'vitaminD', 'choroidalDeltaUm'
+        ])
+        && bio.keys().hasOnly([
+          'flightDay', 'moodScore', 'sleepHours', 'stressLevel',
+          'exerciseMinutes', 'hydrationLiters', 'hrvRmssd',
+          'restingHr', 'nkCellActivity', 'vitaminD', 'choroidalDeltaUm'
+        ])
+        && bio.flightDay is number && bio.flightDay >= -30 && bio.flightDay <= 365
+        && bio.moodScore is number && bio.moodScore >= 1 && bio.moodScore <= 10
+        && bio.sleepHours is number && bio.sleepHours >= 2 && bio.sleepHours <= 12
+        && bio.stressLevel is number && bio.stressLevel >= 1 && bio.stressLevel <= 10
+        && bio.exerciseMinutes is number && bio.exerciseMinutes >= 0 && bio.exerciseMinutes <= 240
+        && bio.hydrationLiters is number && bio.hydrationLiters >= 0 && bio.hydrationLiters <= 6
+        && bio.hrvRmssd is number && bio.hrvRmssd >= 10 && bio.hrvRmssd <= 150
+        && bio.restingHr is number && bio.restingHr >= 35 && bio.restingHr <= 150
+        && bio.nkCellActivity is number && bio.nkCellActivity >= 5 && bio.nkCellActivity <= 90
+        && bio.vitaminD is number && bio.vitaminD >= 5 && bio.vitaminD <= 100
+        && bio.choroidalDeltaUm is number && bio.choroidalDeltaUm >= 0 && bio.choroidalDeltaUm <= 150;
+    }
+
+    function isValidAstronautProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid', 'displayName', 'callsign', 'starsEarned',
+          'selectedSymptoms', 'biometrics', 'completedTests',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'displayName', 'callsign', 'starsEarned',
+          'selectedSymptoms', 'biometrics', 'completedTests',
+          'createdAt', 'updatedAt'
+        ])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80
+        && data.callsign is string && data.callsign.size() >= 1 && data.callsign.size() <= 40
+        && data.starsEarned is number && data.starsEarned >= 0 && data.starsEarned <= 100
+        && data.selectedSymptoms is list && data.selectedSymptoms.size() <= 10
+        && (data.selectedSymptoms.size() == 0 || (data.selectedSymptoms[0] is string && data.selectedSymptoms[0].size() <= 40))
+        && isValidBiometricsMap(data.biometrics)
+        && data.completedTests is list && data.completedTests.size() <= 30
+        && (data.completedTests.size() == 0 || (data.completedTests[0] is string && data.completedTests[0].size() <= 60))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCheckinLog(data, userId) {
+      return data.keys().hasAll(['uid', 'title', 'note', 'starReward', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'title', 'note', 'starReward', 'createdAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 140
+        && data.note is string && data.note.size() <= 280
+        && data.starReward is number && data.starReward >= 1 && data.starReward <= 5
+        && data.createdAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidAstronautProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidAstronautProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'callsign', 'starsEarned',
+          'selectedSymptoms', 'biometrics', 'completedTests', 'updatedAt'
+        ]);
+      allow delete: if false;
+
+      match /checkins/{checkinId} {
+        allow get: if isValidId(userId) && isValidId(checkinId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.uid == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(checkinId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidCheckinLog(incoming(), userId)
+          && incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if isValidId(userId) && isValidId(checkinId) && isOwner(userId);
+      }
+    }
+  }
+}
