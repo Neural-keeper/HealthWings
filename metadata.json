@@ -1,0 +1,6 @@
+{
+  "name": "Pisces Orbital Health",
+  "description": "Astronaut physical and mental health monitor powered by NASA LSAH datasets, light-based microgravity diagnostics, and Dr. Pisces AI triage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
